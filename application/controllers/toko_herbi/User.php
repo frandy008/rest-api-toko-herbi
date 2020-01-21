@@ -14,7 +14,7 @@ class User extends RestController {
 		parent::__construct();
 		$this->load->model('M_toko_herbi');
 
-		$this->methods['pesanan_get']['limit'] = 1; // 500 requests per hour per user/key
+		//$this->methods['pesanan_get']['limit'] = 1; // 500 requests per hour per user/key
 	}
 
 	public function index_get()
@@ -25,39 +25,39 @@ class User extends RestController {
 		$login = $this->M_toko_herbi->loginUser($username,$password);
 		
 		if ($login) {
-			
+			$this->M_toko_herbi->loginUserUpdate($username);
 			$this->response([
                 'Response' => 'True',
-                'dataPesanan' => $pesanan
+                'dataUser' => $login
             ], RestController::HTTP_OK); // NOT_FOUND (404) being the HTTP response code
 		}else{
 			$this->response([
                 'Response' => 'False',
-                'message' => 'kode pesanan tidak tersedia'
+                'message' => 'Username atau password salah !'
             ], RestController::HTTP_NOT_FOUND);
 		}
 	}
 
 	public function index_delete()
 	{
-		$kode_pesanan = $this->delete('kp');
+		$username = $this->delete('u');
 
-		if ($kode_pesanan === null) {
+		if ($username === null) {
 			$this->response([
                 'Response' => 'False',
-                'message' => 'masukan kode pesanan'
+                'Message' => 'Pilih user yang ingin di hapus'
             ], RestController::HTTP_BAD_REQUEST);
 		}else{
-			if ($this->M_pesanan->deletePesanan($kode_pesanan) > 0) {
+			if ($this->M_toko_herbi->deleteUser($username) > 0) {
 				$this->response([
 	                'Response' => 'True',
-	                'kode_pesanan' => $kode_pesanan,
-	                'message' => 'berhasil dihapus'
+	                'Username' => $username,
+	                'Message' => 'berhasil dihapus'
 	            ], RestController::HTTP_NO_CONTENT);
 			}else{
 				$this->response([
 	                'Response' => 'False',
-	                'message' => 'kode pesanan tidak ditemukan'
+	                'Message' => 'User tidak ditemukan'
 	            ], RestController::HTTP_BAD_REQUEST);	
 			}
 		}
@@ -67,48 +67,48 @@ class User extends RestController {
 	{
 		$data = [
 			//'kode_pesanan' => $this->post('kode_pesanan'),
-			'nama_pemesan' => $this->post('nama_pemesan'),
-			'nama_pesanan' => $this->post('nama_pesanan'),
-			'jumlah' => $this->post('jumlah'),
-			'dp' => $this->post('dp'),
-			'total_bayar' => $this->post('total_bayar')
+			'username' => $this->post('u'),
+			'password' => md5($this->post('p')),
+			'no_hp' => $this->post('no_hp'),
+			'email' => $this->post('email'),
+			'id_level' => $this->post('level')
 
 		];
 
-		if ($this->M_pesanan->createPesanan($data) > 0) {
+		if ($this->M_toko_herbi->addUser($data) > 0) {
 			$this->response([
 	                'Response' => 'True',
-	                'message' => 'berhasil membuat pesanan'
+	                'Message' => 'Berhasil menambah user'
             ], RestController::HTTP_CREATED);
 		}else{
 				$this->response([
 	                'Response' => 'False',
-	                'message' => 'gagal membuat pesanan'
+	                'Message' => 'gagal membuat pesanan'
 	            ], RestController::HTTP_BAD_REQUEST);	
 		}
 	}
 
 	public function index_put()
 	{
-		$kode_pesanan = $this->put('kp');
+		$id_user = $this->put('idu');
 		$data = [
-			'nama_pemesan' => $this->put('nama_pemesan'),
-			'nama_pesanan' => $this->put('nama_pesanan'),
-			'jumlah' => $this->put('jumlah'),
-			'dp' => $this->put('dp'),
-			'total_bayar' => $this->put('total_bayar'),
+			'username' => $this->put('u'),
+			'password' => md5($this->put('p')),
+			'no_hp' => $this->put('no_hp'),
+			'email' => $this->put('email'),
+			'id_level' => $this->put('level')
 		];
 
-		if ($this->M_pesanan->updatePesanan($data, $kode_pesanan) > 0) {
+		if ($this->M_toko_herbi->updateUser($data, $id_user) > 0) {
 			$this->response([
 	                'Response' => 'True',
-	                'message' => 'berhasil memperbarui pesanan'
-            ], RestController::HTTP_NO_CONTENT);
+	                'Message' => 'Berhasil memperbarui user'
+            ], 204);
 		}else{
-				$this->response([
-	                'Response' => 'False',
-	                'message' => 'gagal memperbarui pesanan'
-	            ], RestController::HTTP_BAD_REQUEST);	
+			$this->response([
+                'Response' => 'False',
+                'Message' => 'gagal memperbarui user'
+            ], 400);	
 		}
 	}
 
